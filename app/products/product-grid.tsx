@@ -39,7 +39,11 @@ export async function ProductGrid({
 
   // Filter by gender
   if (searchParams.gender) {
-    where.gender = searchParams.gender.toUpperCase() as Gender;
+    // Show products for selected gender OR unisex
+    where.OR = [
+      { gender: searchParams.gender.toUpperCase() as Gender },
+      { gender: "UNISEX" as Gender },
+    ];
   }
 
   // Filter by category

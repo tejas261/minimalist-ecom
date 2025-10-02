@@ -17,7 +17,7 @@ export default function ProductsPage({
   searchParams: SearchParams;
 }) {
   return (
-    <div className="container px-4 w-full py-8">
+    <div className="px-4 w-full py-8">
       <div className="flex flex-col lg:flex-row gap-12">
         {/* Filters Sidebar */}
         <aside className="lg:w-64 flex-shrink-0">

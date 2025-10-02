@@ -28,26 +28,26 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/products/${product.slug}`}>
-      <Card className="group cursor-pointer border-0 shadow-none hover:shadow-lg transition-shadow">
-        <CardContent className="p-0">
-          <div className="relative overflow-hidden rounded-lg mb-4">
+      <Card className="relative group cursor-pointer border-0 shadow-none hover:shadow-lg transition-shadow">
+        <CardContent className="p-0 flex flex-col justify-between">
+          <div className="overflow-hidden rounded-lg mb-4">
+            {hasDiscount && (
+              <Badge className="bg-red-500 z-[50] text-white absolute top-2">
+                Sale
+              </Badge>
+            )}
             <Image
               src={
                 product.images[0] ||
                 "https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=400&q=80"
               }
               alt={product.name}
-              width={400}
-              height={400}
-              className="w-full h-[400px] object-cover transition-transform group-hover:scale-105"
+              width={50}
+              height={50}
+              className="w-full h-full object-cover transition-transform group-hover:scale-105"
             />
-            {hasDiscount && (
-              <Badge className="absolute top-4 left-4 bg-red-500 text-white">
-                Sale
-              </Badge>
-            )}
           </div>
-          <div className="space-y-2">
+          <div className="space-y-2 mx-2">
             <h3 className="font-semibold text-lg line-clamp-2">
               {product.name}
             </h3>

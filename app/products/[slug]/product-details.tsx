@@ -103,7 +103,7 @@ export function ProductDetails({ product }: ProductDetailsProps) {
   };
 
   return (
-    <div className=" py-8">
+    <div className="p-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
         {/* Product Images */}
         <div className="space-y-4">
