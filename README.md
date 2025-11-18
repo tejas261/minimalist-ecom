@@ -1,4 +1,4 @@
-# Minimalist Clothing Ecommerce
+# Minimalist
 
 A modern, minimalist clothing ecommerce web application built with Next.js, Prisma, and Tailwind CSS. This project supports user authentication, product browsing, cart and checkout, admin management, and more.
 
