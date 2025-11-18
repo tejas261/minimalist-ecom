@@ -11,12 +11,7 @@ console.log(
   process.env.RZP_KEY_SECRET ? "✓ Set" : "✗ Missing"
 );
 
-// Validate environment variables
-if (!process.env.RZP_KEY_ID || !process.env.RZP_KEY_SECRET) {
-  console.error("Missing Razorpay environment variables:");
-  console.error("RZP_KEY_ID:", process.env.RZP_KEY_ID || "MISSING");
-  console.error("RZP_KEY_SECRET:", process.env.RZP_KEY_SECRET || "MISSING");
-}
+
 
 const razorpay = new Razorpay({
   key_id: process.env.RZP_KEY_ID!,
