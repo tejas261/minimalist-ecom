@@ -1,4 +1,4 @@
-import { notFound } from "next/navigation";
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/prisma";
 import { ProductDetails } from "./product-details";
 import { Suspense } from "react";
@@ -44,6 +44,7 @@ function ProductError() {
 }
 
 export async function generateStaticParams() {
+  if (!process.env.DATABASE_URL) return [];
   const products = await prisma.product.findMany({
     select: { slug: true },
   });
