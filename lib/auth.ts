@@ -3,6 +3,9 @@ import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
+// Importing relevant types
+import { GetServerSidePropsContext } from "next";
+import { getSession, GetSessionParams } from "next-auth/react";
 
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
@@ -32,7 +35,6 @@ export const authOptions = {
           return null;
         }
 
-        // Compare hashed password
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
@@ -51,7 +53,7 @@ export const authOptions = {
     }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as "jwt", // Ensure 'jwt' is recognized as a valid SessionStrategy
   },
   callbacks: {
     async jwt({ token, user }: { token: any; user: any }) {
@@ -73,3 +75,9 @@ export const authOptions = {
     signUp: "/auth",
   },
 };
+
+export async function getServerSession(
+  context: GetServerSidePropsContext
+): Promise<any> {
+  return getSession(context as unknown as GetSessionParams);
+}

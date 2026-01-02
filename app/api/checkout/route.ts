@@ -4,21 +4,13 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
-// Debug: Check if environment variables are loaded
-console.log("RZP_KEY_ID:", process.env.RZP_KEY_ID ? "✓ Set" : "✗ Missing");
-console.log(
-  "RZP_KEY_SECRET:",
-  process.env.RZP_KEY_SECRET ? "✓ Set" : "✗ Missing"
-);
-
-
-
-const razorpay = new Razorpay({
-  key_id: process.env.RZP_KEY_ID!,
-  key_secret: process.env.RZP_KEY_SECRET!,
-});
-
 export async function POST(req: NextRequest) {
+  // Initialize Razorpay inside the POST function for runtime
+  const razorpay = new Razorpay({
+    key_id: process.env.RZP_KEY_ID!,
+    key_secret: process.env.RZP_KEY_SECRET!,
+  });
+
   // Check authentication first
   const session = await getServerSession(authOptions);
   if (!session || !session.user || !session.user.id) {
