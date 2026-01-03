@@ -3,6 +3,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -27,6 +28,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@map("Accounts")
 }
 
 model Session {
@@ -35,6 +37,7 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@map("Sessions")
 }
 
 model User {
@@ -51,6 +54,8 @@ model User {
   reviews       Review[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+
+  @@map("Users")
 }
 
 model VerificationToken {
@@ -59,6 +64,7 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+  @@map("VerificationTokens")
 }
 
 model Category {
@@ -70,6 +76,8 @@ model Category {
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  @@map("Categories")
 }
 
 model Product {
@@ -94,6 +102,7 @@ model Product {
   @@index([categoryId])
   @@index([status])
   @@index([gender])
+  @@map("Products")
 }
 
 model Variant {
@@ -109,6 +118,7 @@ model Variant {
   updatedAt DateTime    @updatedAt
 
   @@index([productId])
+  @@map("Variants")
 }
 
 model Order {
@@ -127,6 +137,7 @@ model Order {
 
   @@index([userId])
   @@index([status])
+  @@map("Orders")
 }
 
 model OrderItem {
@@ -142,6 +153,7 @@ model OrderItem {
   createdAt DateTime @default(now())
 
   @@index([orderId])
+  @@map("OrderItems")
 }
 
 model Review {
@@ -157,6 +169,7 @@ model Review {
 
   @@index([productId])
   @@unique([userId, productId])
+  @@map("Reviews")
 }
 
 enum Role {

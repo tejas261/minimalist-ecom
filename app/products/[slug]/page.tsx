@@ -43,17 +43,6 @@ function ProductError() {
   );
 }
 
-export async function generateStaticParams() {
-  if (!process.env.DATABASE_URL) return [];
-  const products = await prisma.product.findMany({
-    select: { slug: true },
-  });
-
-  return products.map((product) => ({
-    slug: product.slug,
-  }));
-}
-
 export default async function ProductPage({
   params,
 }: {
