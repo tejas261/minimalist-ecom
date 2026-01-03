@@ -9,16 +9,16 @@ const footerLinks = {
     { name: "Sale", href: "/products?sale=true" },
   ],
   support: [
-    { name: "Contact Us", href: "/contact" },
-    { name: "Size Guide", href: "/size-guide" },
-    { name: "Shipping & Returns", href: "/shipping" },
-    { name: "FAQ", href: "/faq" },
+    { name: "Contact Us", href: "/" },
+    { name: "Size Guide", href: "/" },
+    { name: "Shipping & Returns", href: "/" },
+    { name: "FAQ", href: "/" },
   ],
   company: [
-    { name: "About Us", href: "/about" },
-    { name: "Careers", href: "/careers" },
-    { name: "Sustainability", href: "/sustainability" },
-    { name: "Press", href: "/press" },
+    { name: "About Us", href: "/" },
+    { name: "Careers", href: "/" },
+    { name: "Sustainability", href: "/" },
+    { name: "Press", href: "/" },
   ],
 };
 
@@ -113,17 +113,17 @@ export function Footer() {
 
         <div className="border-t mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © 2024 MINIMAL. All rights reserved.
+            © 2026 MINIMAL. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 sm:mt-0">
             <Link
-              href="/privacy"
+              href="/"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Privacy Policy
             </Link>
             <Link
-              href="/terms"
+              href="/"
               className="text-sm text-muted-foreground hover:text-foreground"
             >
               Terms of Service

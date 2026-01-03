@@ -1,0 +1,50 @@
+services:
+  db:
+    image: postgres:15
+    container_name: minimalist-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: always
+
+  migrate:
+    image: node:22-bookworm-slim
+    container_name: minimalist-migrate
+    working_dir: /app
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+    volumes:
+      - .:/app
+    command: >
+      sh -lc "apt-get update && apt-get install -y openssl libssl-dev && npm ci --legacy-peer-deps --omit=dev && npx prisma db push && npx prisma db seed"
+    restart: "no"
+
+  minimalist:
+    # platform: linux/amd64
+    container_name: minimalist
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+    environment:
+      # Ensure DB name matches the one created by the db service
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+    depends_on:
+      - migrate
+    ports:
+      - "4000:3000"
+    volumes:
+      - ./scripts:/app/scripts:ro
+    restart: always
+
+volumes:
+  db-data:
+    driver: local
