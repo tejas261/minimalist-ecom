@@ -183,13 +183,16 @@ export default function ProfilePage() {
     setSuccess("");
 
     try {
-      const response = await fetch("/api/auth/update-profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: profileData.name,
-        }),
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/update-profile`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: profileData.name,
+          }),
+        },
+      );
 
       const data = await response.json();
 
@@ -547,7 +550,7 @@ export default function ProfilePage() {
                             <span>
                               $
                               {Number(
-                                (item.price || 0) * (item.quantity || 0)
+                                (item.price || 0) * (item.quantity || 0),
                               ).toFixed(2)}
                             </span>
                           </div>
