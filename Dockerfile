@@ -16,4 +16,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts ./scripts
 
 EXPOSE 3000
-CMD ["npm","start"]
+CMD ["server.js"]
