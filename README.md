@@ -99,6 +99,20 @@ public/
 
 6. **Open [http://localhost:3000](http://localhost:3000) in your browser.**
 
+7. **Create an admin user:**
+   - Sign up with your email.
+   - Execute this cURL command
+     `bash
+    curl -X POST http://localhost:3000/api/admin/upgrade \
+-H "Content-Type: application/json" \
+-d '{"email":"user@example.com"}'
+    `
+
+8. To seed the database with sample data, run:
+   ```bash
+   curl -X POST http://localhost:3000/api/admin/seed
+   ```
+
 ---
 
 ## Usage
