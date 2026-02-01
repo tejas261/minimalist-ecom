@@ -69,7 +69,7 @@ export function Header() {
       setIsSearching(true);
       try {
         const response = await fetch(
-          `/api/search?q=${encodeURIComponent(query)}`
+          `/api/search?q=${encodeURIComponent(query)}`,
         );
         const data = await response.json();
         setSearchResults(data.products || []);
@@ -81,7 +81,7 @@ export function Header() {
         setIsSearching(false);
       }
     }, 300),
-    []
+    [],
   );
 
   // Handle search input changes
@@ -97,7 +97,7 @@ export function Header() {
     if (searchQuery.trim()) {
       setShowResults(false);
       window.location.href = `/products?search=${encodeURIComponent(
-        searchQuery
+        searchQuery,
       )}`;
     }
   };
@@ -261,7 +261,7 @@ export function Header() {
                           <div className="p-3 border-t bg-muted/25">
                             <Link
                               href={`/products?search=${encodeURIComponent(
-                                searchQuery
+                                searchQuery,
                               )}`}
                               onClick={() => setShowResults(false)}
                               className="text-xs text-primary hover:underline"
@@ -306,9 +306,6 @@ export function Header() {
                 <>
                   <DropdownMenuItem asChild>
                     <Link href="/profile">Profile</Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/orders">Orders</Link>
                   </DropdownMenuItem>
                   {(session?.user as any)?.role === "ADMIN" && (
                     <>

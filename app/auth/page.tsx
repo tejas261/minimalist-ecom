@@ -130,7 +130,7 @@ export default function AuthPage() {
             </TabsList>
 
             <TabsContent value="signin" className="space-y-4">
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full bg-transparent"
                 onClick={handleGoogleSignIn}
@@ -148,7 +148,7 @@ export default function AuthPage() {
                     Or continue with email
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
@@ -214,7 +214,7 @@ export default function AuthPage() {
             </TabsContent>
 
             <TabsContent value="signup" className="space-y-4">
-              <Button
+              {/* <Button
                 variant="outline"
                 className="w-full bg-transparent"
                 onClick={handleGoogleSignIn}
@@ -232,7 +232,7 @@ export default function AuthPage() {
                     Or create account with email
                   </span>
                 </div>
-              </div>
+              </div> */}
 
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">

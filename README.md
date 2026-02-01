@@ -83,7 +83,6 @@ public/
    ```
 
 3. **Configure environment variables:**
-
    - Copy `.env.example` to `.env.local` and fill in your DB, NextAuth, and Razorpay credentials.
 
 4. **Setup the database:**
@@ -119,7 +118,6 @@ Create a `.env.local` file with:
 ```
 DATABASE_URL=postgresql://user:password@localhost:5432/minimalist
 NEXTAUTH_SECRET=your_secret
-NEXTAUTH_URL=http://localhost:3000
 RZP_KEY_ID=your_razorpay_key_id
 RZP_KEY_SECRET=your_razorpay_key_secret
 ```
