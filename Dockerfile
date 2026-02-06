@@ -1,7 +1,10 @@
 FROM node:22-alpine as builder
 WORKDIR /app
-COPY package*.json .env.production ./
-RUN npm ci --legacy-peer-deps
+COPY package.json ./
+
+ARG NEXT_PUBLIC_API_URL
+
+RUN npm i --legacy-peer-deps
 COPY . .
 RUN npx prisma generate && npm run build
 
