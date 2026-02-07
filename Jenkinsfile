@@ -62,57 +62,50 @@ pipeline {
             }
         }
 
-stage('CD: Deploy to EC2') {
-  when { branch 'master' }
-  steps {
-    withCredentials([[
-      $class: 'AmazonWebServicesCredentialsBinding',
-      credentialsId: 'aws-creds-id',
-      accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-      secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-    ],
-      string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL'),
-      string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXTAUTH_SECRET'),
-      string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_KEY_ID'),
-      string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_KEY_SECRET')
-    ]) {
-      sshagent([SSH_CREDS]) {
-        echo "REMOTE_SERVER=$REMOTE_SERVER"
-        sh '''#!/bin/bash -e
-        # 1) Login EC2 to ECR (Jenkins has AWS creds)
-        aws ecr get-login-password --region "$AWS_REGION" \
-            | ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" \
-            "docker login --username AWS --password-stdin $ECR_REGISTRY"
+        stage('CD: Deploy to EC2') {
+    when { branch 'master' }
+    steps {
+        // We only need the App Secrets now, not AWS keys for the remote server
+        withCredentials([
+            string(credentialsId: 'DATABASE_URL', variable: 'DB_URL'),
+            string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXT_SEC'),
+            string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_ID'),
+            string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_SEC')
+        ]) {
+            sshagent([SSH_CREDS]) {
+                sh """
+                # 1) Tell the EC2 to login to ECR using its own IAM Role
+                ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
 
-        # 2) Deploy on EC2 (set env vars inside remote shell)
-        ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" 'bash -se' <<'REMOTE'
-            set -e
+                # 2) Deploy using Jenkins variable expansion
+                ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<REMOTE
+                    set -e
+                    
+                    # Pull image (Authorized by IAM Role)
+                    docker pull ${ECR_REGISTRY}/${IMAGE_NAME}:latest
 
-            export DATABASE_URL='"$DATABASE_URL"'
-            export NEXTAUTH_SECRET='"$NEXTAUTH_SECRET"'
-            export RZP_KEY_ID='"$RZP_KEY_ID"'
-            export RZP_KEY_SECRET='"$RZP_KEY_SECRET"'
+                    # Cleanup old container
+                    docker stop ${IMAGE_NAME} || true
+                    docker rm ${IMAGE_NAME} || true
 
-            docker pull '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
-
-            docker stop '"$IMAGE_NAME"' || true
-            docker rm '"$IMAGE_NAME"' || true
-
-            docker run -d \
-            --name '"$IMAGE_NAME"' \
-            --restart always \
-            -p 3000:3000 \
-            -e DATABASE_URL="$DATABASE_URL" \
-            -e NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-            -e RZP_KEY_ID="$RZP_KEY_ID" \
-            -e RZP_KEY_SECRET="$RZP_KEY_SECRET" \
-            '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
-        REMOTE
-        '''
-      }
+                    # Run new container
+                    docker run -d \
+                      --name ${IMAGE_NAME} \
+                      --restart always \
+                      -p 3000:3000 \
+                      -e DATABASE_URL='${DB_URL}' \
+                      -e NEXTAUTH_SECRET='${NEXT_SEC}' \
+                      -e RZP_KEY_ID='${RZP_ID}' \
+                      -e RZP_KEY_SECRET='${RZP_SEC}' \
+                      ${ECR_REGISTRY}/${IMAGE_NAME}:latest
+REMOTE
+                """
+            }
+        }
     }
-  }
 }
+
+
 
         stage('CD: Health Check') {
             when { branch 'master' }
