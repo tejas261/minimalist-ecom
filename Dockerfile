@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package.json ./
 
 ARG NEXT_PUBLIC_API_URL
-
+# testings
 RUN npm i --legacy-peer-deps
 COPY . .
 RUN npx prisma generate && npm run build
