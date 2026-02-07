@@ -47,44 +47,51 @@ pipeline {
             }
         }
 
-        stage('CD: Deploy to EC2') {
-            when { branch 'master' }
-            steps {
-                withCredentials([
-                    string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL'),
-                    string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXTAUTH_SECRET'),
-                    string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_KEY_ID'),
-                    string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_KEY_SECRET')
-                ]) {
-                    // And use sshagent for the key
-                    sshagent([SSH_CREDS]) {
-                        sh """
-                            # 1. Login to ECR on remote server (Flag already added here)
-                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+stage('CD: Deploy to EC2') {
+  when { branch 'master' }
+  steps {
+    withCredentials([
+      string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL'),
+      string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXTAUTH_SECRET'),
+      string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_KEY_ID'),
+      string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_KEY_SECRET')
+    ]) {
+      sshagent([SSH_CREDS]) {
+        sh '''#!/bin/bash -e
+          # ECR login: generate password locally, send to remote docker login
+          aws ecr get-login-password --region "$AWS_REGION" \
+            | ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" \
+              "docker login --username AWS --password-stdin $ECR_REGISTRY"
 
-                            # 2. Pull new image (Flag needed here too)
-                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "docker pull ${ECR_REGISTRY}/${IMAGE_NAME}:latest"
+          # Deploy on remote, pass secrets as env vars (no Groovy interpolation)
+          ssh -o StrictHostKeyChecking=no \
+            DATABASE_URL="$DATABASE_URL" \
+            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            RZP_KEY_ID="$RZP_KEY_ID" \
+            RZP_KEY_SECRET="$RZP_KEY_SECRET" \
+            "$REMOTE_SERVER" 'bash -se' <<'REMOTE'
+              set -e
 
-                            # 3. Stop old container and Run new one with Runtime Env Vars
-                            # Use a 'here-doc' syntax to pass runtime environment variables securely
-                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<EOF
-                                docker stop ${IMAGE_NAME} || true
-                                docker rm ${IMAGE_NAME} || true
-                                docker run -d \\
-                                    --name ${IMAGE_NAME} \\
-                                    --restart always \\
-                                    -p 3000:3000 \\
-                                    -e DATABASE_URL='${DATABASE_URL}' \\
-                                    -e NEXTAUTH_SECRET='${NEXTAUTH_SECRET}' \\
-                                    -e RZP_KEY_ID='${RZP_KEY_ID}' \\
-                                    -e RZP_KEY_SECRET='${RZP_KEY_SECRET}' \\
-                                    ${ECR_REGISTRY}/${IMAGE_NAME}:latest
-EOF
-                        """
-                    }
-                }
-            }
-        }
+              docker pull '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
+
+              docker stop '"$IMAGE_NAME"' || true
+              docker rm '"$IMAGE_NAME"' || true
+
+              docker run -d \
+                --name '"$IMAGE_NAME"' \
+                --restart always \
+                -p 3000:3000 \
+                -e DATABASE_URL="$DATABASE_URL" \
+                -e NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+                -e RZP_KEY_ID="$RZP_KEY_ID" \
+                -e RZP_KEY_SECRET="$RZP_KEY_SECRET" \
+                '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
+REMOTE
+        '''
+      }
+    }
+  }
+}
 
         stage('CD: Health Check') {
             when { branch 'master' }
