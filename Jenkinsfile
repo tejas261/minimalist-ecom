@@ -5,7 +5,7 @@ pipeline {
         // --- Registry Config ---
         AWS_REGION     = "ap-south-1"
         AWS_CREDS      = "aws-creds-id" 
-        ECR_REGISTRY   = "174706800587.dkr.ecr.ap-south-1.amazonaws.com/minimalist"
+        ECR_REGISTRY   = "174706800587.dkr.ecr.ap-south-1.amazonaws.com"
         IMAGE_NAME     = "minimalist"
         BRANCH_NAME    = "master"
         NEXT_PUBLIC_API_URL = credentials('NEXT_PUBLIC_API_URL') 
