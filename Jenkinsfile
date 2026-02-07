@@ -15,24 +15,23 @@ pipeline {
         REMOTE_SERVER  = "ubuntu@ec2-13-232-231-20.ap-south-1.compute.amazonaws.com"
     }
 
-    stage('Precheck: AWS creds') {
-        steps {
-            withCredentials([[
-            $class: 'AmazonWebServicesCredentialsBinding',
-            credentialsId: 'aws-creds-id',
-            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-            ]]) {
-            sh '''
-                set -e
-                aws sts get-caller-identity
-            '''
-            }
-        }
-    }
-
     stages {
-        // Removed the manual 'Checkout' stage here, Jenkins does it automatically.
+
+        stage('Precheck: AWS creds') {
+            steps {
+                withCredentials([[
+                $class: 'AmazonWebServicesCredentialsBinding',
+                credentialsId: 'aws-creds-id',
+                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                sh '''
+                    set -e
+                    aws sts get-caller-identity
+                '''
+                }
+            }
+    }
 
         stage('CI: Install & Lint') {
             steps {
