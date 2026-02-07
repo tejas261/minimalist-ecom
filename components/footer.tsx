@@ -18,7 +18,7 @@ const footerLinks = {
     { name: "About Us", href: "/" },
     { name: "Careers", href: "/" },
     { name: "Sustainability", href: "/" },
-    { name: "Press", href: "/" },
+    { name: "Deals", href: "/" },
   ],
 };
 

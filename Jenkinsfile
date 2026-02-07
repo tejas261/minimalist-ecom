@@ -103,27 +103,9 @@ REMOTE
     }
   }
 }
-
-
-
-
-        stage('CD: Health Check') {
-            when { branch 'master' }
-            steps {
-                script {
-                    echo "Waiting for app to start..."
-                    sleep 15
-                    // Basic check if the port is responding
-                    sh "curl -f http://13.232.231.20:3000 || exit 1"
-                }
-            }
-        }
     }
 
     post {
-        always {
-            sh 'docker system prune -f'
-        }
         success {
             echo "Pipeline completed successfully!"
         }
