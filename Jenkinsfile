@@ -63,47 +63,47 @@ pipeline {
         }
 
         stage('CD: Deploy to EC2') {
-    when { branch 'master' }
-    steps {
-        // We only need the App Secrets now, not AWS keys for the remote server
-        withCredentials([
-            string(credentialsId: 'DATABASE_URL', variable: 'DB_URL'),
-            string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXT_SEC'),
-            string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_ID'),
-            string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_SEC')
-        ]) {
-            sshagent([SSH_CREDS]) {
-                sh """
-                # 1) Tell the EC2 to login to ECR using its own IAM Role
-                ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+  when { branch 'master' }
+  steps {
+    withCredentials([
+      [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds-id', accessKeyVariable: 'AWS_ACCESS_KEY_ID', secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'],
+      string(credentialsId: 'DATABASE_URL', variable: 'DB_URL'),
+      string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXT_SEC'),
+      string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_ID'),
+      string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_SEC')
+    ]) {
+      sshagent([SSH_CREDS]) {
+        sh """
+        # 1) Login EC2 to ECR
+        aws ecr get-login-password --region ${AWS_REGION} | ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "docker login --username AWS --password-stdin ${ECR_REGISTRY}"
 
-                # 2) Deploy using Jenkins variable expansion
-                ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<REMOTE
-                    set -e
-                    
-                    # Pull image (Authorized by IAM Role)
-                    docker pull ${ECR_REGISTRY}/${IMAGE_NAME}:latest
+        # 2) Deploy using double-quoted string to allow Jenkins variable expansion
+        ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<REMOTE
+            set -e
+            # Pull the image using Jenkins variables
+            docker pull ${ECR_REGISTRY}/${IMAGE_NAME}:latest
 
-                    # Cleanup old container
-                    docker stop ${IMAGE_NAME} || true
-                    docker rm ${IMAGE_NAME} || true
+            # Stop and remove old container
+            docker stop ${IMAGE_NAME} || true
+            docker rm ${IMAGE_NAME} || true
 
-                    # Run new container
-                    docker run -d \
-                      --name ${IMAGE_NAME} \
-                      --restart always \
-                      -p 3000:3000 \
-                      -e DATABASE_URL='${DB_URL}' \
-                      -e NEXTAUTH_SECRET='${NEXT_SEC}' \
-                      -e RZP_KEY_ID='${RZP_ID}' \
-                      -e RZP_KEY_SECRET='${RZP_SEC}' \
-                      ${ECR_REGISTRY}/${IMAGE_NAME}:latest
+            # Run new container with credentials passed from Jenkins
+            docker run -d \
+              --name ${IMAGE_NAME} \
+              --restart always \
+              -p 3000:3000 \
+              -e DATABASE_URL="${DB_URL}" \
+              -e NEXTAUTH_SECRET="${NEXT_SEC}" \
+              -e RZP_KEY_ID="${RZP_ID}" \
+              -e RZP_KEY_SECRET="${RZP_SEC}" \
+              ${ECR_REGISTRY}/${IMAGE_NAME}:latest
 REMOTE
-                """
-            }
-        }
+        """
+      }
     }
+  }
 }
+
 
 
 
