@@ -13,8 +13,6 @@ pipeline {
         SSH_CREDS      = "ssh-server-key"
         REMOTE_SERVER  = "ubuntu@ec2-13-232-231-20.ap-south-1.compute.amazonaws.com"
         
-        // --- Next.js Env Variables ---
-        // Build-time (Browser)
         DATABASE_URL=credentials('DATABASE_URL')
         NEXTAUTH_SECRET     = credentials('NEXTAUTH_SECRET')
         RZP_KEY_ID          = credentials('RZP_KEY_ID')
@@ -48,7 +46,7 @@ pipeline {
                         appImage.push()
                         
                         // Tag 'latest' only if on main branch
-                        if (env.BRANCH_NAME == 'main') {
+                        if (env.BRANCH_NAME == 'master') {
                             appImage.push("latest")
                         }
                     }
@@ -57,7 +55,7 @@ pipeline {
         }
 
         stage('CD: Deploy to EC2') {
-            when { branch 'main' }
+            when { branch 'master' }
             steps {
                 sshagent([SSH_CREDS]) {
                     sh """
@@ -75,7 +73,7 @@ pipeline {
                                 --name ${IMAGE_NAME} \
                                 --restart always \
                                 -p 3000:3000 \
-                                -e DATABASE_URL='${DB_URL}' \
+                                -e DATABASE_URL='${DATABASE_URL}' \
                                 ${ECR_REGISTRY}/${IMAGE_NAME}:latest
                         "
                     """
@@ -84,13 +82,13 @@ pipeline {
         }
 
         stage('CD: Health Check') {
-            when { branch 'main' }
+            when { branch 'master' }
             steps {
                 script {
                     echo "Waiting for app to start..."
                     sleep 15
                     // Basic check if the port is responding
-                    sh "curl -f http://your-ec2-ip:3000 || exit 1"
+                    sh "curl -f http://13.232.231.20:3000 || exit 1"
                 }
             }
         }
