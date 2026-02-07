@@ -77,36 +77,37 @@ stage('CD: Deploy to EC2') {
       string(credentialsId: 'RZP_KEY_SECRET', variable: 'RZP_KEY_SECRET')
     ]) {
       sshagent([SSH_CREDS]) {
+        echo "REMOTE_SERVER=$REMOTE_SERVER"
         sh '''#!/bin/bash -e
-          # 1) Jenkins generates ECR password (AWS creds available here)
-          aws ecr get-login-password --region "$AWS_REGION" \
+        # 1) Login EC2 to ECR (Jenkins has AWS creds)
+        aws ecr get-login-password --region "$AWS_REGION" \
             | ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" \
-              "docker login --username AWS --password-stdin $ECR_REGISTRY"
+            "docker login --username AWS --password-stdin $ECR_REGISTRY"
 
-          # 2) Deploy on EC2 (no AWS needed on EC2)
-          ssh -o StrictHostKeyChecking=no \
-            DATABASE_URL="$DATABASE_URL" \
-            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-            RZP_KEY_ID="$RZP_KEY_ID" \
-            RZP_KEY_SECRET="$RZP_KEY_SECRET" \
-            "$REMOTE_SERVER" 'bash -se' <<'REMOTE'
-              set -e
+        # 2) Deploy on EC2 (set env vars inside remote shell)
+        ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" 'bash -se' <<'REMOTE'
+            set -e
 
-              docker pull '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
+            export DATABASE_URL='"$DATABASE_URL"'
+            export NEXTAUTH_SECRET='"$NEXTAUTH_SECRET"'
+            export RZP_KEY_ID='"$RZP_KEY_ID"'
+            export RZP_KEY_SECRET='"$RZP_KEY_SECRET"'
 
-              docker stop '"$IMAGE_NAME"' || true
-              docker rm '"$IMAGE_NAME"' || true
+            docker pull '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
 
-              docker run -d \
-                --name '"$IMAGE_NAME"' \
-                --restart always \
-                -p 3000:3000 \
-                -e DATABASE_URL="$DATABASE_URL" \
-                -e NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-                -e RZP_KEY_ID="$RZP_KEY_ID" \
-                -e RZP_KEY_SECRET="$RZP_KEY_SECRET" \
-                '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
-REMOTE
+            docker stop '"$IMAGE_NAME"' || true
+            docker rm '"$IMAGE_NAME"' || true
+
+            docker run -d \
+            --name '"$IMAGE_NAME"' \
+            --restart always \
+            -p 3000:3000 \
+            -e DATABASE_URL="$DATABASE_URL" \
+            -e NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            -e RZP_KEY_ID="$RZP_KEY_ID" \
+            -e RZP_KEY_SECRET="$RZP_KEY_SECRET" \
+            '"$ECR_REGISTRY"'/'"$IMAGE_NAME"':latest
+        REMOTE
         '''
       }
     }
