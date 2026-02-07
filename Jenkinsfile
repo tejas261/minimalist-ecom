@@ -40,6 +40,8 @@ pipeline {
                         if (env.BRANCH_NAME == 'master') {
                             appImage.push("latest")
                         }
+
+                        sh "docker image prune -f"
                     }
                 }
             }
@@ -93,6 +95,9 @@ pipeline {
     }
 
     post {
+        always {
+            sh 'docker system prune -f'
+        }
         success {
             echo "Pipeline completed successfully!"
         }
