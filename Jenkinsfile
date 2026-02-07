@@ -59,22 +59,27 @@ pipeline {
                     // And use sshagent for the key
                     sshagent([SSH_CREDS]) {
                         sh """
-                            # ... (ECR Login and Pull commands omitted for brevity) ...
+                            # 1. Login to ECR on remote server (Flag already added here)
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ECR_REGISTRY}"
+
+                            # 2. Pull new image (Flag needed here too)
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} "docker pull ${ECR_REGISTRY}/${IMAGE_NAME}:latest"
 
                             # 3. Stop old container and Run new one with Runtime Env Vars
-                            ssh ${REMOTE_SERVER} "
-                                docker stop ${IMAGE_NAME} || true && \
-                                docker rm ${IMAGE_NAME} || true && \
-                                docker run -d \
-                                    --name ${IMAGE_NAME} \
-                                    --restart always \
-                                    -p 3000:3000 \
-                                    -e DATABASE_URL='${DATABASE_URL}' \
-                                    -e NEXTAUTH_SECRET='${NEXTAUTH_SECRET}' \
-                                    -e RZP_KEY_ID='${RZP_KEY_ID}' \
-                                    -e RZP_KEY_SECRET='${RZP_KEY_SECRET}' \
+                            # Use a 'here-doc' syntax to pass runtime environment variables securely
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_SERVER} <<EOF
+                                docker stop ${IMAGE_NAME} || true
+                                docker rm ${IMAGE_NAME} || true
+                                docker run -d \\
+                                    --name ${IMAGE_NAME} \\
+                                    --restart always \\
+                                    -p 3000:3000 \\
+                                    -e DATABASE_URL='${DATABASE_URL}' \\
+                                    -e NEXTAUTH_SECRET='${NEXTAUTH_SECRET}' \\
+                                    -e RZP_KEY_ID='${RZP_KEY_ID}' \\
+                                    -e RZP_KEY_SECRET='${RZP_KEY_SECRET}' \\
                                     ${ECR_REGISTRY}/${IMAGE_NAME}:latest
-                            "
+EOF
                         """
                     }
                 }
