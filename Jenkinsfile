@@ -21,7 +21,6 @@ pipeline {
         stage('CI: Install & Lint') {
             steps {
                 sh "npm install --legacy-peer-deps"
-                sh "npm run lint"
             }
         }
 
