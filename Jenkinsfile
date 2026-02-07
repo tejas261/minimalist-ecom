@@ -15,11 +15,10 @@ pipeline {
         
         // --- Next.js Env Variables ---
         // Build-time (Browser)
-        DATABASE_URL="postgres://avnadmin:AVNS_TDyVDwNeBfmKbL28XmI@test-men-o.l.aivencloud.com:13957/defaultdb?sslmode=require"
-NEXTAUTH_SECRET=minimalist-secret-key
-RZP_KEY_ID=rzp_test_SApr8tgh5i3QWq
-RZP_KEY_SECRET=jN5svF61mq7894Y8EXcSAqnl
-NEXT_PUBLIC_API_URL="http://localhost:3000"
+        DATABASE_URL=credentials('DATABASE_URL')
+        NEXTAUTH_SECRET     = credentials('NEXTAUTH_SECRET')
+        RZP_KEY_ID          = credentials('RZP_KEY_ID')
+        RZP_KEY_SECRET      = credentials('RZP_KEY_SECRET')
     }
 
     stages {
