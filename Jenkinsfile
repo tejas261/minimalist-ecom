@@ -15,6 +15,22 @@ pipeline {
         REMOTE_SERVER  = "ubuntu@ec2-13-232-231-20.ap-south-1.compute.amazonaws.com"
     }
 
+    stage('Precheck: AWS creds') {
+        steps {
+            withCredentials([[
+            $class: 'AmazonWebServicesCredentialsBinding',
+            credentialsId: 'aws-creds-id',
+            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+            ]]) {
+            sh '''
+                set -e
+                aws sts get-caller-identity
+            '''
+            }
+        }
+    }
+
     stages {
         // Removed the manual 'Checkout' stage here, Jenkins does it automatically.
 
@@ -50,7 +66,12 @@ pipeline {
 stage('CD: Deploy to EC2') {
   when { branch 'master' }
   steps {
-    withCredentials([
+    withCredentials([[
+      $class: 'AmazonWebServicesCredentialsBinding',
+      credentialsId: 'aws-creds-id',
+      accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+      secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+    ],
       string(credentialsId: 'DATABASE_URL', variable: 'DATABASE_URL'),
       string(credentialsId: 'NEXTAUTH_SECRET', variable: 'NEXTAUTH_SECRET'),
       string(credentialsId: 'RZP_KEY_ID', variable: 'RZP_KEY_ID'),
@@ -58,12 +79,12 @@ stage('CD: Deploy to EC2') {
     ]) {
       sshagent([SSH_CREDS]) {
         sh '''#!/bin/bash -e
-          # ECR login: generate password locally, send to remote docker login
+          # 1) Jenkins generates ECR password (AWS creds available here)
           aws ecr get-login-password --region "$AWS_REGION" \
             | ssh -o StrictHostKeyChecking=no "$REMOTE_SERVER" \
               "docker login --username AWS --password-stdin $ECR_REGISTRY"
 
-          # Deploy on remote, pass secrets as env vars (no Groovy interpolation)
+          # 2) Deploy on EC2 (no AWS needed on EC2)
           ssh -o StrictHostKeyChecking=no \
             DATABASE_URL="$DATABASE_URL" \
             NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
