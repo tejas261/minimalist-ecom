@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "MINIMALIST - Modern Minimalistic Clothing",
   description:
     "Discover timeless pieces crafted with care. Sustainable fashion for the modern minimalist.",
-  generator: "v0.dev",
+  generator: "tejas261",
   openGraph: {
     title: "MINIMALIST - Modern Minimalistic Clothing",
     description:
