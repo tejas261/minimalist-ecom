@@ -117,7 +117,7 @@ export default function AuthPage() {
     <div className="w-full max-w-md">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl">Welcome to MINIMAL</CardTitle>
+          <CardTitle className="text-2xl">Welcome to MINIMALIST</CardTitle>
           <CardDescription>
             Sign in to your account or create a new one
           </CardDescription>

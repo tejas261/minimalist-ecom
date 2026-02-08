@@ -30,7 +30,7 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="text-xl font-bold tracking-tight">
-              MINIMAL
+              MINIMALIST
             </Link>
             <p className="text-sm text-muted-foreground max-w-xs">
               Timeless pieces crafted with care. Sustainable fashion for the
@@ -113,7 +113,7 @@ export function Footer() {
 
         <div className="border-t mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center">
           <p className="text-sm text-muted-foreground">
-            © 2026 MINIMAL. All rights reserved.
+            © 2026 MINIMALIST. All rights reserved.
           </p>
           <div className="flex space-x-6 mt-4 sm:mt-0">
             <Link

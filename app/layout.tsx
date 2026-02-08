@@ -10,16 +10,16 @@ import { GlobalErrorBoundary } from "@/components/global-error-boundary";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MINIMAL - Modern Minimalistic Clothing",
+  title: "MINIMALIST - Modern Minimalistic Clothing",
   description:
     "Discover timeless pieces crafted with care. Sustainable fashion for the modern minimalist.",
   generator: "v0.dev",
   openGraph: {
-    title: "MINIMAL - Modern Minimalistic Clothing",
+    title: "MINIMALIST - Modern Minimalistic Clothing",
     description:
       "Discover timeless pieces crafted with care. Sustainable fashion for the modern minimalist.",
     url: "https://minimalist-clothing.com/",
-    siteName: "MINIMAL Clothing",
+    siteName: "MINIMALIST Clothing",
     images: [
       {
         url: "https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=1200&q=80",
@@ -33,7 +33,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "MINIMAL - Modern Minimalistic Clothing",
+    title: "MINIMALIST - Modern Minimalistic Clothing",
     description:
       "Discover timeless pieces crafted with care. Sustainable fashion for the modern minimalist.",
     images: [

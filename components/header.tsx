@@ -137,7 +137,7 @@ export function Header() {
           <SheetContent side="left" className="w-[300px] sm:w-[400px]">
             <nav className="flex flex-col gap-4">
               <Link href="/" className="text-lg font-semibold">
-                MINIMAL
+                MINIMALIST
               </Link>
               {navigation.map((item) => (
                 <Link
@@ -186,7 +186,7 @@ export function Header() {
         <nav className="hidden md:flex items-center space-x-8">
           {/* Logo */}
           <Link href="/" className="text-xl font-bold tracking-tight">
-            MINIMAL
+            MINIMALIST
           </Link>
           {navigation.map((item) => (
             <Link

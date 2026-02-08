@@ -8,8 +8,8 @@ import { Providers } from "../providers";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Sign In - MINIMAL",
-  description: "Sign in to your MINIMAL account",
+  title: "Sign In - MINIMALIST",
+  description: "Sign in to your MINIMALIST account",
 };
 
 export default function AuthLayout({
