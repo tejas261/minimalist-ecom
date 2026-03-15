@@ -9,7 +9,6 @@
 
 # production
 /build
-saved-chatgpt.md
 
 # debug
 npm-debug.log*
@@ -29,3 +28,8 @@ next-env.d.ts
 .DS_Store
 db-dump
 package-lock.json
+
+#terraform
+.terraform*
+terraform.tfstate
+terraform.tfstate.backup
