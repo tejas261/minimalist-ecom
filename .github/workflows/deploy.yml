@@ -8,7 +8,7 @@ on:
 
 env:
   AZURE_REGION: southindia
-  RESOURCE_GROUP: aks-minimal-rg
+  RESOURCE_GROUP: minimalist_group
   AKS_CLUSTER: minimal-aks
   ACR_REGISTRY: minimalist.azurecr.io
   IMAGE_NAME: samples/minimalist
