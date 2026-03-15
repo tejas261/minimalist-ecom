@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minimalist
+  namespace: minimalist
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: minimalist
+  template:
+    metadata:
+      labels:
+        app: minimalist
+    spec:
+      containers:
+        - name: minimalist
+          image: minimalist.azurecr.io/samples/minimalist:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: minimalist-secrets
+                  key: DATABASE_URL
+            - name: NEXTAUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: minimalist-secrets
+                  key: NEXTAUTH_SECRET
+            - name: RZP_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: minimalist-secrets
+                  key: RZP_KEY_ID
+            - name: RZP_KEY_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: minimalist-secrets
+                  key: RZP_KEY_SECRET
+          readinessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /api/health
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minimalist-service
+  namespace: minimalist
+spec:
+  type: LoadBalancer
+  selector:
+    app: minimalist
+  ports:
+    - port: 80
+      targetPort: 3000
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: minimalist-secrets
+  namespace: minimalist
+type: Opaque
+stringData:
+  DATABASE_URL: postgresql://postgres:postgres@postgres.minimalist.svc.cluster.local:5432/minimalistdb
+  NEXTAUTH_SECRET: minimalist-secret-key
+  RZP_KEY_ID: rzp_test_SApr8tgh5i3QWq
+  RZP_KEY_SECRET: jN5svF61mq7894Y8EXcSAqnl
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimalist-ingress
+  namespace: minimalist
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    alb.ingress.kubernetes.io/healthcheck-path: /
+spec:
+  ingressClassName: alb
+  rules:
+  - host: tejas-new.online
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minimalist-service
+            port:
+              number: 80
