@@ -32,3 +32,6 @@ package-lock.json
 #terraform
 .terraform*
 terraform.*
+
+#notes
+NOTES.md

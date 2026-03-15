@@ -1,0 +1,84 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  AZURE_REGION: centralindia
+  RESOURCE_GROUP: aks-minimal-rg
+  AKS_CLUSTER: minimal-aks
+  ACR_REGISTRY: minimalist.azurecr.io
+  IMAGE_NAME: samples/minimalist
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Azure Container Registry
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  deploy-to-aks:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials --resource-group ${{ env.RESOURCE_GROUP }} --name ${{ env.AKS_CLUSTER }} --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          # Create namespace if not exists
+          kubectl create namespace minimalist --dry-run=client -o json | kubectl apply -f -
+
+          # Deploy postgres
+          kubectl apply -f ./k8s
+
+          # Update image to latest commit SHA
+          kubectl set image deployment/minimalist minimalist=${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} --namespace minimalist
+
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/minimalist --namespace minimalist --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n minimalist
+          kubectl get svc -n minimalist
