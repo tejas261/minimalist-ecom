@@ -15,7 +15,7 @@ provider "azurerm" {
 
 resource "azurerm_resource_group" "rg" {
   name     = "aks-minimal-rg"
-  location = "centralindia"
+  location = "southindia"
 }
 
 # Azure Container Registry
