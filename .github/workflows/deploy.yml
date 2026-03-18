@@ -25,6 +25,11 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@v6
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=tejas261_minimalist-ecom
+            -Dsonar.organization=tejas261
+            -Dsonar.host.url=https://sonarcloud.io
 
   build-and-push:
     runs-on: ubuntu-latest
