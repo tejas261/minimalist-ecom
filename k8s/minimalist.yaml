@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: minimalist
+spec:
+  selector:
+    matchLabels:
+      app: minimalist
+  template:
+    metadata:
+      labels:
+        app: minimalist
+    spec:
+      containers:
+      - name: minimalist
+        image: minimalist
+        imagePullPolicy: Never
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: minimalist-secrets
+              key: DATABASE_URL
+        - name: NEXTAUTH_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: minimalist-secrets
+              key: NEXTAUTH_SECRET
+        - name: RZP_KEY_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: minimalist-secrets
+              key: RZP_KEY_SECRET
+        - name: RZP_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: minimalist-secrets
+              key: RZP_KEY_ID
+        - name: NEXT_PUBLIC_API_URL
+          valueFrom:
+            secretKeyRef:
+              name: minimalist-secrets
+              key: NEXT_PUBLIC_API_URL
+        resources:
+          limits:
+            memory: "128Mi"
+            cpu: "500m"
+        ports:
+        - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: minimalist
+spec:
+  selector:
+    app: minimalist
+  ports:
+  - port: 80
+    targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: minimalist-ingress
+  annotations:
+    # Essential for NGINX controller to pick this up
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  ingressClassName: nginx
+  rules:
+  - host: minimalist.local # Change this to your actual domain
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: minimalist # Must match your Service name
+            port:
+              number: 80 # Must match your Service port
