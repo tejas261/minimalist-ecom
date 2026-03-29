@@ -1,0 +1,105 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+env:
+  AZURE_REGION: southindia
+  RESOURCE_GROUP: aks-minimal-rg
+  AKS_CLUSTER: minimal-aks
+  ACR_REGISTRY: minimalist.azurecr.io
+  IMAGE_NAME: samples/minimalist
+
+jobs:
+  sonarqube:
+    name: SonarQube Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=tejas261_minimalist-ecom
+            -Dsonar.organization=tejas261
+            -Dsonar.host.url=https://sonarcloud.io
+
+  build-and-push:
+    runs-on: ubuntu-latest
+    needs: sonarqube      
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: az acr login --name minimalist
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+            ${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+
+  deploy-to-aks:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main')
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set up kubectl
+        uses: azure/setup-kubectl@v4
+        with:
+          version: 'latest'
+
+      - name: Get AKS credentials
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --name ${{ env.AKS_CLUSTER }} \
+            --overwrite-existing
+
+      - name: Deploy to AKS
+        run: |
+          kubectl create namespace minimalist --dry-run=client -o json | kubectl apply -f -
+          kubectl apply -f ./k8s
+
+          kubectl set image deployment/minimalist \
+          minimalist=${{ env.ACR_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
+          --namespace minimalist
+
+      - name: Wait for deployment
+        run: |
+          kubectl rollout status deployment/minimalist --namespace minimalist --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          kubectl get pods -n minimalist
+          kubectl get svc -n minimalist
